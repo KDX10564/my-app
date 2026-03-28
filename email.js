@@ -1,13 +1,14 @@
-// استدعاء المكتبات
 const express = require('express');
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 require('dotenv').config();
 
 const app = express();
-
 app.use(express.json());
 
-// إعداد API KEY
+// تخزين OTP مؤقت (ذاكرة)
+const otpStore = {};
+
+// إعداد Brevo
 const client = SibApiV3Sdk.ApiClient.instance;
 const apiKey = client.authentications['api-key'];
 apiKey.apiKey = process.env.BREVO_API_KEY;
@@ -20,68 +21,61 @@ app.get('/', (req, res) => {
 });
 
 
-// ✅ تأكيد الطلب
-app.post('/order', async (req, res) => {
-try {
+// ✅ 1. إرسال OTP
+app.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-
-    sendSmtpEmail.sender = {
-      name: "متجري",
-      email: "info@kdx-sa.com"
-    };
-
-    sendSmtpEmail.to = [{ email: "teamkdx.sa@gmail.com" }];
-    sendSmtpEmail.subject = "تأكيد الطلب 🧾";
-
-    sendSmtpEmail.htmlContent = `
-      <h1>تم استلام طلبك ✅</h1>
-      <p>شكراً لك 🙏</p>
-    `;
-
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-
-    res.send("✅ تم إرسال تأكيد الطلب");
-  } catch (err) {
-    console.log(err);
-    res.send("❌ خطأ في الإرسال");
+  if (!email) {
+    return res.send('❌ اكتب الإيميل');
   }
-});
 
+  const otp = Math.floor(100000 + Math.random() * 900000);
 
-// ✅ OTP
-app.get('/otp', async (req, res) => {
+  // تخزين الكود
+  otpStore[email] = otp;
+
   try {
-    const code = Math.floor(100000 + Math.random() * 900000);
-
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
     sendSmtpEmail.sender = {
-      name: "متجري",
+      name: "KDX",
       email: "info@kdx-sa.com"
     };
 
-    sendSmtpEmail.to = [{ email: "teamkdx.sa@gmail.com" }];
+    sendSmtpEmail.to = [{ email }];
+
     sendSmtpEmail.subject = "رمز التحقق 🔐";
 
     sendSmtpEmail.htmlContent = `
       <h1>رمز التحقق</h1>
-      <h2>${code}</h2>
+      <h2>${otp}</h2>
     `;
 
     await apiInstance.sendTransacEmail(sendSmtpEmail);
 
-    res.send("✅ تم إرسال OTP");
+    res.send('✅ تم إرسال OTP');
   } catch (err) {
     console.log(err);
-    res.send("❌ خطأ في الإرسال");
+    res.send('❌ خطأ في الإرسال');
+  }
+});
+
+
+// ✅ 2. التحقق من OTP
+app.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+
+  if (otpStore[email] == otp) {
+    delete otpStore[email]; // حذف بعد الاستخدام
+    return res.send('✅ تم التحقق بنجاح');
+  } else {
+    return res.send('❌ كود غير صحيح');
   }
 });
 
 
 // تشغيل السيرفر
-const PORT = process.env.PORT || 3000;
-
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 السيرفر شغال على ${PORT}`);
 });
