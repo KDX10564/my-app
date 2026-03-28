@@ -26,7 +26,7 @@ app.post('/send-otp', async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.send('❌ اكتب الإيميل');
+    return res.send('❌ info@kdx-sa.com ');
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000);
@@ -42,7 +42,11 @@ app.post('/send-otp', async (req, res) => {
       email: "info@kdx-sa.com"
     };
 
-    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.to = [
+  {
+    email: email
+  }
+];
 
     sendSmtpEmail.subject = "رمز التحقق 🔐";
 
