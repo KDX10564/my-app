@@ -2,10 +2,10 @@
   "name": "komel",
   "version": "1.0.0",
   "description": "",
- "main": "email.js",
-"scripts": {
-  "start": "node email.js"
-},
+  "main": "email.js",
+  "scripts": {
+    "start": "node email.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -13,6 +13,8 @@
   "dependencies": {
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "sib-api-v3-sdk": "^8.5.0"
+    "sib-api-v3-sdk": "^8.5.0",
+    "mongoose": "^8.0.0",
+    "jsonwebtoken": "^9.0.0"
   }
 }
